@@ -2,6 +2,7 @@
   <view class="content"
     :style="{ height: windowGeo.windowHeight }"
     @click="setDefault">
+		<text class="restNums">{{answerList.value.length}}/60</text>
 		<img class="img img_left" src="@/static/left_small.png" alt="">
 		<img class="img img_right" src="@/static/right_small.png" alt="">
 		<uni-swipe-action
@@ -16,7 +17,7 @@
 				<!-- 符合 -->
 				<template v-slot:left>
 					<view class="slot_btn"
-						@click.stop="setAnswer(1, question.id)"
+						@click.stop="setAnswer('left', question.id)"
 						:style="{backgroundColor: 'var(--box_yes)', marginTop: flexMargin}">
 						<text>符合</text>
 					</view>
@@ -25,7 +26,7 @@
 				<!-- 不符合 -->
 				<template v-slot:right>
 					<view class="slot_btn"
-						@click.stop="setAnswer(0, question.id)"
+						@click.stop="setAnswer('right', question.id)"
 						:style="{backgroundColor: 'var(--box_no)', marginTop: flexMargin}">
 						<text>不符合</text>
 					</view>
@@ -38,15 +39,16 @@
 						row_selected: selectedIndex.value === question.id,
 						row_notSelected:
 							selectedIndex.value !== question.id && selectedIndex.value !== -1,
-						animate__animated:true, 
-						animate__fadeOutLeft: currentFadingOptions.type === 'left' && currentFadingOptions.id === question.id,
-						animate__fadeOutRight: currentFadingOptions.type === 'right' && currentFadingOptions.id === question.id,
-						row_yes: question.answer === 'left',
-						row_no: question.answer === 'right'
+						animate__animated: true, 
+						animate__fadeInUp: true,
+						animate__fadeOutLeft: currentFadingOptions.direction === 'right' && currentFadingOptions.id === question.id,
+						animate__fadeOutRight: currentFadingOptions.direction === 'left' && currentFadingOptions.id === question.id,
+						row_yes: question.answer === 'left' && selectedIndex.value === question.id,
+						row_no: question.answer === 'right' && selectedIndex.value === question.id
 					}" 
 					:style="{ 
 						marginTop: flexMargin,
-						animationDuration: '1s'
+						animationDuration: '0.2s'
 						}"
 					:data-id="question.id"
 					@click.stop="onClick">
@@ -92,8 +94,11 @@ export default {
 
 <script setup>
 import { computed, reactive, nextTick } from "vue";
-import { initQuestions } from "../../utils/form.js";
+import { onShareAppMessage } from "@/utils/useShare"
 import { useStore } from "vuex";
+import { onReady } from "@dcloudio/uni-app";
+import { initQuestions } from "../../utils/form.js";
+import { useGetType } from "../../utils/getResult.js";
 const store = useStore();
 
 // 初始化高度、问题单列表
@@ -101,15 +106,18 @@ const store = useStore();
 const windowGeo = computed(() => store.getters.deviceGeo);
 const flex4Question = computed(() => store.getters.flex4Question);
 const flexMargin = computed(() => flex4Question.value.QUESTION_MARGIN);
-// 问题单列表
-const orginQestions = initQuestions();
 const currentQuestions = reactive({ value: [] });
-currentQuestions.value = orginQestions.slice(0, flex4Question.value.QUESTION_COUNTS).map((question) => {
-  return {
-    ...question,
-    answer: "none",
-  };
-});
+const orginQestions = initQuestions().slice(0);
+
+onReady(()=>{
+	// 问题单列表
+	currentQuestions.value = orginQestions.splice(0, flex4Question.value.QUESTION_COUNTS).map((question) => {
+		return {
+			...question,
+			answer: "none",
+		};
+	});
+})
 
 // 选项样式 ———— 控制
 const selectedIndex = reactive({ value: -1 });
@@ -149,14 +157,31 @@ const onClick = e => {
 
 // 答案统计
 const answerList = reactive({value : []});
-const currentFadingOptions = reactive({id: -1, type: ''})
+const currentFadingOptions = reactive({id: -1, direction:''})
 // 选择答案
 const setAnswer = (answer, id) => {
 	answerList.value.push({id, answer});
 	currentFadingOptions.id = id;
-	currentFadingOptions.type = answer ? 'right' : 'left';
+	currentFadingOptions.direction = answer;
 	selectedIndex.value = -1;
-	console.log(answerList.value);
+	const deleteIndex = currentQuestions.value.findIndex( question => id === question.id)
+	if (currentQuestions.value.length){
+		setTimeout(() => {
+			currentQuestions.value.splice(deleteIndex, 1);
+			// 等待删除完成之后，再添加新的
+			nextTick(() => {
+				if (currentQuestions.value.length){
+					currentQuestions.value.push(...orginQestions.splice(0, 1).map(question => ({
+					...question,
+					answer: "none",
+				})));
+				} else {
+					store.commit('setOutput', useGetType(answerList.value))
+					uni.navigateTo({ url: '../queryOutput/queryOutput' });
+				}
+			})
+		}, 300);
+	}
 }
 
 
@@ -173,6 +198,15 @@ const setAnswer = (answer, id) => {
   -webkit-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
   background-color: $uni-bg-color-main;
+	.restNums {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		background-color: $uni-btn-color;
+		padding: 10rpx;
+		border-radius: 20rpx;
+		color: $uni-text-color;
+	}
 	.question_wrapper {
 		position: relative;
 		

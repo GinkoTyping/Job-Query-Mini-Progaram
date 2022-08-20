@@ -1,15 +1,15 @@
 <template>
   <view class="content"
     :style="{ height: windowGeo.windowHeight }">
-    <img class="bg-img"
-      src="@/static/homepage.jpg" />
+    <img class="bg-img" src="@/static/homepage.jpg"/>
     <view
       class="animate__animated animate__fadeInDown"
       style="display: flex; flex-direction: column; justify-content: center">
-      <image class="logo"
-        :src="userAvatar" />
-      <text class="user-name"
-        style="text-align: center">{{ userName }}</text>
+			<open-data class="logo" style="border-radius: 50%;" type="userAvatarUrl"></open-data>
+			<view class="user-name" style="text-align: center" >
+				<text>welcome! </text>
+				<open-data type="userNickName"></open-data>
+			</view>
     </view>
     <view
       class="text-area animate__animated animate__fadeInUp">
@@ -22,10 +22,8 @@
 <script setup>
 import { computed, onMounted } from "vue";
 import { useStore } from "vuex";
+import { onShareAppMessage } from "@/utils/useShare"
 const store = useStore();
-
-const userAvatar = computed(() => store.getters.userAvatar);
-const userName = computed(() => store.getters.userName);
 
 const windowGeo = computed(() => store.getters.deviceGeo);
 onMounted(() => { });
@@ -70,6 +68,7 @@ const push2Query = () => {
   }
 }
 .logo {
+	overflow: hidden;
   height: 200rpx;
   width: 200rpx;
   margin-top: 200rpx;

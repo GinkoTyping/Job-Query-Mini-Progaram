@@ -9,16 +9,22 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "职业测试"
+				"navigationBarTitleText": "开始测试"
 			}
 		},
 		{
 			"path": "pages/queryOptions/queryOptions",
 			"style": {
-				"navigationBarTitleText": "职业测试",
+				"navigationBarTitleText": "测试ING",
 				"app-plus": {
 					"bounce": "none"
 				}
+			}
+		},
+		{
+			"path": "pages/queryOutput/queryOutput",
+			"style": {
+				"navigationBarTitleText": "结果！"
 			}
 		}
 	],
