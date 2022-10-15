@@ -5,84 +5,51 @@
 		<text class="restNums">{{answerList.value.length}}/60</text>
 		<img class="img img_left" src="@/static/left_small.png" alt="">
 		<img class="img img_right" src="@/static/right_small.png" alt="">
-		<uni-swipe-action
-			class="queryOptions">
-			<uni-swipe-action-item
+		<view class="queryOptions">
+			<view
 				v-for="(question, index) in currentQuestions.value"
 				:key="question.id"
 				class="question_box"
 				:show="question.answer"
 				@change="(val) => onChange(val, question, index)">
+				<uni-transition ref="ani" custom-class="transition" :mode-class="['fade', 'zoom-in']" :styles="{}" :show="question.isShow">
+					<!-- 问题区域 -->
+					<view 
+						:class="{
+							row: true,
+							row_selected: selectedIndex.value === question.id,
+							row_notSelected:
+								selectedIndex.value !== question.id && selectedIndex.value !== -1,
+							row_yes: question.answer === 'left' && selectedIndex.value === question.id,
+							row_no: question.answer === 'right' && selectedIndex.value === question.id
+						}" 
+						:style="{ 
+							marginTop: flexMargin,
+							}"
+						:data-id="question.id"
+						@click.stop="onClick">
+						<!-- 符号 -->
+						<view class="icons" @click.stop="setAnswer('left', question)" style="backgroundColor: var(--box_yes);" :class="{ 'show_icon': selectedIndex.value === question.id}">
+							<uni-icons
+								color="var(--box_normal)"
+								type="checkmarkempty"
+								size="16">
+							</uni-icons>
+						</view>
 
-				<!-- 符合 -->
-				<template v-slot:left>
-					<view class="slot_btn"
-						@click.stop="setAnswer('left', question.id)"
-						:style="{backgroundColor: 'var(--box_yes)', marginTop: flexMargin}">
-						<text>符合</text>
+						<text>{{ question.question }}</text>
+						
+						<!-- 符号 -->
+						<view class="icons" @click.stop="setAnswer('right', question)" style="backgroundColor: var(--box_no);" :class="{ 'show_icon': selectedIndex.value === question.id}">
+							<uni-icons type="closeempty"
+								color="var(--box_normal)"
+								size="16">
+							</uni-icons>
+						</view>
 					</view>
-				</template>
-
-				<!-- 不符合 -->
-				<template v-slot:right>
-					<view class="slot_btn"
-						@click.stop="setAnswer('right', question.id)"
-						:style="{backgroundColor: 'var(--box_no)', marginTop: flexMargin}">
-						<text>不符合</text>
-					</view>
-				</template>
-
-				<!-- 问题区域 -->
-				<view 
-					:class="{
-						row: true,
-						row_selected: selectedIndex.value === question.id,
-						row_notSelected:
-							selectedIndex.value !== question.id && selectedIndex.value !== -1,
-						animate__animated: true, 
-						animate__fadeInUp: true,
-						animate__fadeOutLeft: currentFadingOptions.direction === 'right' && currentFadingOptions.id === question.id,
-						animate__fadeOutRight: currentFadingOptions.direction === 'left' && currentFadingOptions.id === question.id,
-						row_yes: question.answer === 'left' && selectedIndex.value === question.id,
-						row_no: question.answer === 'right' && selectedIndex.value === question.id
-					}" 
-					:style="{ 
-						marginTop: flexMargin,
-						animationDuration: '0.2s'
-						}"
-					:data-id="question.id"
-					@click.stop="onClick">
-					<!-- 符号 -->
-					<view class="icons" :class="{ 'show_icon': selectedIndex.value === question.id}">
-						<uni-icons
-							color="var(--box_icon)"
-							type="arrow-right"
-							size="16">
-						</uni-icons>
-						<uni-icons
-							color="var(--box_yes)"
-							type="checkmarkempty"
-							size="16">
-						</uni-icons>
-					</view>
-
-					<text>{{ question.question }}</text>
-					
-					<!-- 符号 -->
-					<view class="icons" :class="{ 'show_icon': selectedIndex.value === question.id}">
-						<uni-icons type="closeempty"
-							color="var(--box_no)"
-							size="16">
-						</uni-icons>
-						<uni-icons type="arrow-left"
-							color="var(--box_icon)"
-							size="16">
-						</uni-icons>
-					</view>
-				</view>
-
-			</uni-swipe-action-item>
-		</uni-swipe-action>
+				</uni-transition>
+			</view>
+		</view>
   </view>
 </template>
 
@@ -96,7 +63,7 @@ export default {
 import { computed, reactive, nextTick } from "vue";
 import { onShareAppMessage } from "@/utils/useShare"
 import { useStore } from "vuex";
-import { onReady } from "@dcloudio/uni-app";
+import { onLoad } from "@dcloudio/uni-app";
 import { initQuestions } from "../../utils/form.js";
 import { useGetType } from "../../utils/getResult.js";
 const store = useStore();
@@ -107,16 +74,27 @@ const windowGeo = computed(() => store.getters.deviceGeo);
 const flex4Question = computed(() => store.getters.flex4Question);
 const flexMargin = computed(() => flex4Question.value.QUESTION_MARGIN);
 const currentQuestions = reactive({ value: [] });
-const orginQestions = initQuestions().slice(0);
+let orginQestions = initQuestions().slice(0);
 
-onReady(()=>{
+// 答案统计
+const answerList = reactive({value : []});
+const records = computed(() => store.state.records);
+onLoad((option = 'reset') => {
+	if (option.isReset === 'continue'){
+		answerList.value.push(...records.value);
+		const savedId = records.value.map(item => item.id);
+		orginQestions = orginQestions.filter(question => !savedId.includes(question.id));
+	} else {
+		store.commit('updateRecords', { execution: 'reset' });
+	}
 	// 问题单列表
 	currentQuestions.value = orginQestions.splice(0, flex4Question.value.QUESTION_COUNTS).map((question) => {
-		return {
-			...question,
-			answer: "none",
-		};
-	});
+			return {
+				...question,
+				answer: "none",
+				isShow: true,
+			};
+		});
 })
 
 // 选项样式 ———— 控制
@@ -155,16 +133,17 @@ const onClick = e => {
   selectedIndex.value = e.currentTarget.dataset.id;
 };
 
-// 答案统计
-const answerList = reactive({value : []});
-const currentFadingOptions = reactive({id: -1, direction:''})
 // 选择答案
-const setAnswer = (answer, id) => {
-	answerList.value.push({id, answer});
-	currentFadingOptions.id = id;
-	currentFadingOptions.direction = answer;
+const setAnswer = (answer, question) => {
+	answerList.value.push({id: question.id, answer});
+	store.commit('updateRecords', {
+		item: {id: question.id, answer},
+		execution: 'add',
+	});
+
+	question.isShow = false
 	selectedIndex.value = -1;
-	const deleteIndex = currentQuestions.value.findIndex( question => id === question.id)
+	const deleteIndex = currentQuestions.value.findIndex( curQuestion => curQuestion.id === question.id);
 	if (currentQuestions.value.length){
 		setTimeout(() => {
 			currentQuestions.value.splice(deleteIndex, 1);
@@ -172,9 +151,10 @@ const setAnswer = (answer, id) => {
 			nextTick(() => {
 				if (currentQuestions.value.length){
 					currentQuestions.value.push(...orginQestions.splice(0, 1).map(question => ({
-					...question,
-					answer: "none",
-				})));
+						...question,
+						answer: "none",
+						isShow: true,
+					})));
 				} else {
 					store.commit('setOutput', useGetType(answerList.value))
 					uni.navigateTo({ url: '../queryOutput/queryOutput' });
@@ -191,7 +171,7 @@ const setAnswer = (answer, id) => {
 <style lang="scss" scoped>
 .content {
   --box_normal: #{$uni-bg-color};
-  --box_yes: #{$uni-color-primary};
+  --box_yes: #{$uni-color-success};
   --box_no: #{$uni-color-error};
   --box_icon: #{$uni-bg-color-main};
   overflow-y: hidden;
@@ -213,13 +193,26 @@ const setAnswer = (answer, id) => {
 	}
   .queryOptions {
 		margin-top: 350rpx;
-    display: flex;
     flex-direction: column;
     .question_box {
       &:first-child .row,
       &:first-child .slot_btn {
         margin-top: 0 !important;
       }
+			.icons {
+				margin: 0 20rpx;
+				width: 60rpx;
+				height: 60rpx;
+				border-radius: 50%;
+				background-color: red;
+				display: none;
+			}
+			.show_icon {
+				display: flex;
+				flex: none;
+				align-items: center;
+				justify-content: center;
+			}
     }
     .slot_btn {
       box-sizing: border-box;
@@ -234,6 +227,7 @@ const setAnswer = (answer, id) => {
     }
     .row {
       color: $uni-text-color;
+			border-radius: 30rpx;
       height: 150rpx;
       text-align: center;
       line-height: 50rpx;
@@ -241,20 +235,15 @@ const setAnswer = (answer, id) => {
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-			background-color: $uni-bg-color;
+			background-color: $uni-color-primary;
 			text {
 				margin: 0 auto;
 				text-align: center;
 			}
-			.icons {
-				display: none;
-			}
-			.show_icon {
-				display: block;
-			}
     }
     .row_selected {
       height: 210rpx !important;
+			background-color: $uni-bg-color;
     }
     .row_notSelected {
       height: 135rpx !important;

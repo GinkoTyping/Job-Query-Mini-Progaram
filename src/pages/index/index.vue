@@ -14,21 +14,43 @@
     <view
       class="text-area animate__animated animate__fadeInUp">
       <button class="btn"
-        @click="push2Query">开始测试</button>
+        @click="handleClick">开始测试</button>
     </view>
+
+		<!-- 提示窗示例 -->
+		<uni-transition ref="ani" custom-class="transition" :mode-class="['fade', 'zoom-in']" :show="isShowDialog">
+			<view class="popover">
+				<text class="title">提示</text>
+				<text>检测到未完成的测试记录，是否继续测试？</text>
+				<view class="footer">
+					<text @click="push2Query('reset')">重新测试</text>
+					<text @click="push2Query('continue')">继续上次测试</text>
+				</view>
+			</view>
+		</uni-transition>
   </view>
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, ref } from "vue";
 import { useStore } from "vuex";
 import { onShareAppMessage } from "@/utils/useShare"
 const store = useStore();
 
 const windowGeo = computed(() => store.getters.deviceGeo);
-onMounted(() => { });
-const push2Query = () => {
-  uni.navigateTo({ url: "../queryOptions/queryOptions" });
+
+const isShowDialog = ref(false);
+const hasRecords = computed(() => store.state.records.length > 0);
+const handleClick = () => {
+	if (hasRecords.value){
+		isShowDialog.value = true;
+	} else {
+		uni.navigateTo({ url: '../queryOptions/queryOptions?isReset=reset' });
+	}
+}
+const push2Query = isReset => {
+	isShowDialog.value = false;
+  uni.navigateTo({ url: `../queryOptions/queryOptions?isReset=${isReset}` });
 };
 </script>
 
@@ -40,6 +62,12 @@ const push2Query = () => {
   100% {
     top: -100%;
   }
+}
+::v-deep .transition {
+	position: fixed;
+	width: 70%;
+	left: 50%;
+	top: 50%;
 }
 .content {
   overflow-y: hidden;
@@ -86,5 +114,58 @@ const push2Query = () => {
   background-color: $uni-btn-color !important;
   color: $uni-text-color;
   font-weight: 600;
+}
+.popover {
+	height: 300rpx;
+	box-sizing: border-box;
+	transform: translate(-50%, -50%);
+	background-color:$uni-color-primary;
+	border-radius: 30rpx;
+	padding: 0 20rpx;
+	color: $uni-text-color;
+	text {
+		display: block;
+		text-align: center;
+	}
+	.title {
+		font-size: 16px;
+		line-height: 80rpx;
+		font-weight: 600;
+	}
+	.footer {
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+		display: flex;
+		left: 0rpx;
+		justify-content: space-between;
+		&::before {
+			position: absolute;
+			content: '';
+			width: 100%;
+			height: 1rpx;
+			left: 0rpx;
+			top: -1rpx;
+			border-top: 1rpx black solid;
+		}
+		text {
+			width: 50%;
+			line-height: 70rpx;
+			&:nth-child(2) {
+				position: relative;
+				background-color: $uni-color-error;
+				&::after {
+					position: absolute;
+					content: '';
+					width: 1rpx;
+					height: 70rpx;
+					border-left: 1rpx black solid;
+					left: 0;
+					top: 0;
+				}
+			}
+		}
+		
+	}
 }
 </style>

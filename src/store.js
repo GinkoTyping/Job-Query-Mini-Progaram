@@ -5,7 +5,8 @@ export const store = createStore({
 	state: {
 		gradesCollections: {},
 		systemInfo: {},
-		output: {}
+		output: {},
+		records: [],
 	},
 	mutations: {
 		setSystemInfo(state, val) {
@@ -13,6 +14,17 @@ export const store = createStore({
 		},
 		setOutput(state, val) {
 			state.output = markRaw(val);
+		},
+		updateRecords(state, { item = {}, execution }) {
+			if (execution === 'add') {
+				state.records.push(item);
+			}
+			if (execution === 'backward') {
+				state.records.pop();
+			}
+			if (execution === 'reset') {
+				state.records = [];
+			}
 		}
 	},
 	actions: {
