@@ -3,6 +3,7 @@ import { markRaw } from 'vue'
 
 export const store = createStore({
 	state: {
+		formKind: '',
 		gradesCollections: {},
 		systemInfo: {},
 		output: {},
@@ -14,6 +15,9 @@ export const store = createStore({
 		},
 		setOutput(state, val) {
 			state.output = markRaw(val);
+		},
+		setFormKind(state, val) {
+			state.formKind = val;
 		},
 		updateRecords(state, { item = {}, execution }) {
 			if (execution === 'add') {
@@ -44,17 +48,23 @@ export const store = createStore({
 			}
 		},
 		flex4Question(state) {
-			const height4question = state.systemInfo.windowHeight * (750 / state.systemInfo.windowWidth) - 350
+			let showItemCount;
+			let totalMargin;
+			const height4question = state.systemInfo.windowHeight * (750 / state.systemInfo.windowWidth) - 350;
 			if (height4question >= 150 * 6 + 20 * 5) {
+				showItemCount = state.formKind === '60' ? 5 : 4;
+				totalMargin = state.formKind === '60' ? height4question - 150 * 6 : height4question - 150 * 5 - 220;
 				return {
 					QUESTION_HEIGHT: `${height4question}rpx`,
-					QUESTION_MARGIN: `${Math.floor((height4question - 150 * 6) / 5)}rpx`,
+					QUESTION_MARGIN: `${Math.floor(totalMargin / showItemCount)}rpx !important`,
 					QUESTION_COUNTS: 6
 				}
 			}
+			showItemCount = state.formKind === '60' ? 4 : 3;
+			totalMargin = state.formKind === '60' ? height4question - 150 * 5 : height4question - 150 * 4 - 220;
 			return {
 				QUESTION_HEIGHT: `${height4question}rpx`,
-				QUESTION_MARGIN: `${Math.floor((height4question - 150 * 5) / 4)}rpx`,
+				QUESTION_MARGIN: `${Math.floor(totalMargin / showItemCount)}rpx !important`,
 				QUESTION_COUNTS: 5
 			}
 		},
@@ -66,6 +76,27 @@ export const store = createStore({
 			})
 			temp = temp.sort((a, b) => b.value - a.value);
 			return temp;
+		},
+		finalOutput20(state) {
+			let tempMap = new Map();
+			['D', 'I', 'S', 'C'].forEach(key => {
+				tempMap.set(key, 0);
+			});
+			tempMap = state.output.reduce((pre, cur) => {
+				const value = pre.get(cur.answer) + 1;
+				pre.set(cur.answer, value);
+				return pre;
+			}, tempMap);
+
+			let output = []
+			tempMap.forEach((value, key) => {
+				output.push({
+					value,
+					type: key,
+				})
+			});
+			output = output.sort((a, b) => b.value - a.value);
+			return output;
 		}
 	}
 })
