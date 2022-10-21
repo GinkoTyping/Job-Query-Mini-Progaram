@@ -49,7 +49,7 @@ const dialogConfig = computed(() => {
 			height: '250rpx',
 			buttons: {
 				left: "精准版(60题)",
-				right: "精简版(20题)",
+				right: "精简版(10题)",
 			}
 		}
 	}
@@ -58,7 +58,7 @@ const dialogConfig = computed(() => {
 		height: '300rpx',
 		buttons: {
 			left: "重新测试",
-			right: `继续上次(${hasRecords.value}/${currentFormKind.value})`,
+			right: `继续上次(${hasRecords.value}/${currentFormKind.value === '60' ? '60' : '10'})`,
 		}
 	}
 })

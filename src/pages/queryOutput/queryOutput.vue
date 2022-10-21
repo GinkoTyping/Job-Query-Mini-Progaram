@@ -1,5 +1,9 @@
 <template>
 	<view class="queryOutput" :style="{ height: windowGeo.windowHeight }">
+		<button class="button-share" open-type="share" >
+			<uni-icons type="gift" size="20" style="lineHeight: 50rpx;"></uni-icons>
+			<text>分享</text>
+		</button>
 		<view class="title">
 			<text>{{currentType.name}}</text>
 			<uni-icons type="vip-filled" size="30" color="rgb(41,121,255)" style="position: absolute;"></uni-icons>
@@ -163,6 +167,19 @@ page {
 
 .queryOutput {
 	background-color: $uni-bg-color;
+	position: relative;
+	.button-share {
+		color: $uni-text-color;
+		position: absolute;
+		z-index: 99;
+		background-color: $uni-btn-color;
+		right: 15rpx;
+		top: 15rpx;
+		font-size: 30rpx;
+		height: 60rpx;
+		display: flex;
+		align-items: center;
+	}
 }
 
 text {

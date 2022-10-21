@@ -54,10 +54,10 @@
 						}" 
 						:data-id="question.id">
 						<view class="row quertion-title" @click.stop="">
-							<uni-icons v-show="question.id > 1" @click.stop="setPreviousAnswer(question)" type="back" color="var(--btn_color)" size="30" style="margin: 0 10px;">
+							<uni-icons v-show="answerList.value.length" @click.stop="setPreviousAnswer(question)" type="back" color="var(--btn_color)" size="40" style="margin: 0 10px;">
 							</uni-icons>
-							<text>{{question.title}}</text>
-							<uni-icons v-show="selectedIndex.value !== -1" @click.stop="setAnswer(selectedIndex.value, question)" :type="question.id !== totalCounts.value ? 'forward' : 'checkbox-filled'" color="var(--btn_color)" size="30" style="margin: 0 10px;">
+							<text class="quertion-title__content">{{question.title}}</text>
+							<uni-icons v-show="selectedIndex.value !== -1" @click.stop="setAnswer(selectedIndex.value, question)" :type="question.id !== totalCounts.value ? 'forward' : 'checkbox-filled'" color="var(--btn_color)" size="40" style="margin: 0 10px;">
 							</uni-icons>
 						</view>
 						
@@ -80,6 +80,7 @@
 				</uni-transition>
 			</view>
 		</view>
+		<!-- 广告 -->
 		<view
 			v-if="answerList.value.length === totalCounts"
 			style="marginTop: 350rpx;display: flex; flex-direction: column;justify-content: center;">
@@ -104,6 +105,7 @@ import { onLoad } from "@dcloudio/uni-app";
 import { initQuestions } from "../../utils/form.js";
 import init20Questions from "../../utils/form-20";
 import { useGetType } from "../../utils/getResult.js";
+import { getRandom } from '@/utils/mapForm.js';
 const store = useStore();
 
 /**
@@ -142,7 +144,7 @@ const headLine = computed(() => {
 onLoad((option = 'reset') => {
 	routeQuery.value = option.isReset;
 
-	orginQestions.value = option.isReset.includes('60') ? initQuestions().slice(0) : init20Questions.questions.slice(0);
+	orginQestions.value = option.isReset.includes('60') ? initQuestions().slice(0) : getRandom(init20Questions.questions.slice(0));
 	totalCounts.value = orginQestions.value.length;
 	if (option.isReset.includes('continue')) {
 		answerList.value.push(...records.value);
