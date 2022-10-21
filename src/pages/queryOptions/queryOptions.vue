@@ -1,5 +1,9 @@
 <template>
 	<view class="content" :style="{ height: windowGeo.windowHeight }" @click="setDefault">
+		<button class="button-share" open-type="share" >
+			<uni-icons type="gift" size="20" style="lineHeight: 50rpx;"></uni-icons>
+			<text>分享</text>
+		</button>
 		<text class="restNums">{{headLine}}</text>
 		<img class="img img_left" src="@/static/left_small.png" alt="">
 		<img class="img img_right" src="@/static/right_small.png" alt="">
@@ -283,12 +287,25 @@ const onAdShow = () => {
 	-webkit-transform: translate3d(0, 0, 0);
 	transform: translate3d(0, 0, 0);
 	background-color: $uni-bg-color-main;
-
+	position: relative;
+	.button-share {
+		color: $uni-text-color;
+		position: absolute;
+		z-index: 99;
+		background-color: $uni-btn-color;
+		right: 15rpx;
+		top: 15rpx;
+		font-size: 30rpx;
+		height: 60rpx;
+		display: flex;
+		align-items: center;
+	}
 	.restNums {
 		position: absolute;
+		top: 15rpx;
 		left: 50%;
 		transform: translateX(-50%);
-		background-color: $uni-btn-color;
+		background-color: $uni-bg-color;
 		padding: 10rpx;
 		border-radius: 20rpx;
 		color: $uni-text-color;
